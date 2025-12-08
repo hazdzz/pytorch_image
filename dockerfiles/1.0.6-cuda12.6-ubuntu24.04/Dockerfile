@@ -1,16 +1,16 @@
-FROM nvcr.io/nvidia/cuda-dl-base:24.10-cuda12.6-devel-ubuntu22.04
+FROM nvcr.io/nvidia/cuda-dl-base:24.12-cuda12.6-devel-ubuntu24.04
 
 WORKDIR /root/
-ARG PYTHON_VERSION=3.10
+ARG PYTHON_VERSION=3.12
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
 # Leave these args here to better use the Docker build cache
 # renovate: datasource=custom.miniconda_installer
-ARG INSTALLER_URL_LINUX64="https://repo.anaconda.com/miniconda/Miniconda3-py310_24.9.2-0-Linux-x86_64.sh"
-ARG SHA256SUM_LINUX64="364869f004c6259268b09a667ed476080bf4f44e9c4ab06a293146df8990d43f"
+ARG INSTALLER_URL_LINUX64="https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh"
+ARG SHA256SUM_LINUX64="07fc00c146a481f7ae2657a31eb7ec0d5d77a107b981d58ab5d7cd8bc99be778"
 # renovate: datasource=custom.miniconda_installer
-ARG INSTALLER_URL_AARCH64="https://repo.anaconda.com/miniconda/Miniconda3-py310_24.9.2-0-Linux-aarch64.sh"
-ARG SHA256SUM_AARCH64="5d022f16ecb01d33ac8c85a87a0a8dccfb025dc90b20dbd56c4b9ae8f9727578"
+ARG INSTALLER_URL_AARCH64="https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-aarch64.sh"
+ARG SHA256SUM_AARCH64="8c5c1d38011fed8053d7bdaaf7fab372c3f71dbb77791e07692fb8059b7828bd"
 
 RUN set -x && \
     apt update && \
@@ -31,7 +31,6 @@ RUN set -x && \
         mercurial \
         openssh-client \
         procps \
-        python3.10 \
         subversion \
         vim \
 	    wget && \
@@ -64,11 +63,21 @@ RUN set -x && \
 RUN set -x && \
     conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main && \
     conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r && \
-    conda create -n exp python=3.10 -y && \
+    conda create -n exp python=3.12 -y && \
     conda config --add channels conda-forge && \
-    conda install -n exp pytorch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 pytorch-cuda=12.1 -c pytorch -c nvidia -y && \
+    conda install -n exp pytorch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 pytorch-cuda=12.4 -c pytorch -c nvidia -y && \
     conda install -n exp conda-forge::tqdm -y && \
     conda install -n exp anaconda::numpy -y && \
     echo "conda activate exp" >> ~/.bashrc
 
+ENV CONDA_DEFAULT_ENV=exp
+ENV PATH=/opt/conda/envs/exp/bin:$PATH
+
+RUN echo '#!/bin/bash\n\
+source /opt/conda/etc/profile.d/conda.sh\n\
+conda activate exp\n\
+exec "$@"' > /entrypoint.sh && \
+    chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
 CMD [ "/bin/bash" ]
