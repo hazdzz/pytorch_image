@@ -62,8 +62,6 @@ RUN set -x && \
     /opt/conda/bin/conda clean -afy
 
 RUN set -x && \
-    conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main && \
-    conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r && \
     conda create -n exp python=3.10 -y && \
     conda config --add channels conda-forge && \
     conda install -n exp pytorch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 pytorch-cuda=12.1 -c pytorch -c nvidia -y && \
